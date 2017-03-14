@@ -1,8 +1,11 @@
 # Blouson
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/blouson`. To experiment with that code, run `bin/console` for an interactive prompt.
+Blouson is a filter tool for Rails to conceal sensitive data from various logs.
 
-TODO: Delete this and the text above, and describe your gem
+- HTTP Request parameters in Rails log
+- SQL query in Rails log
+- Exception messages in `ActiveRecord::StatementInvalid`
+- Sentry Raven parameters
 
 ## Installation
 
@@ -22,20 +25,64 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### SensitiveParamsSilencer
+If there is a HTTP request parameter prefixed with ```secure_```, Blouson conceals sensitive data from logging.
+Blouson enables this filter automatically.
 
-## Development
+Example:
+```
+Started PUT "/employees/1" for 127.0.0.1 at Tue Jan 1 00:00:00 +0900 2013
+Processing by EmployeesController#update as HTML
+  Parameters: {"commit"=>"Update Employee", "id"=>"1", "employee"=>{"name"=>"", "secure_personal_information"=>"[FILTERED]"}, "utf8"=>"✓"}
+  [Blouson::SensitiveParamsSilencer] SQL Log is skipped for sensitive data
+```
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+### SensitiveQueryFilter
+If there is a table prefixed with `secure_`, in exception message of `ActiveRecord::StatementInvalid`, Blouson conceals sensitive data from exception messages.
+Blouson enables this filter automatically.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+Example:
+
+```
+RuntimeError: error: SELECT  `secure_users`.* FROM `secure_users` WHERE `secure_users`.`email` = '[FILTERED]'  ORDER BY `secure_users`.`id` ASC LIMIT 1
+```
+
+### SensitiveTableQueryLogSilencer
+Blouson provides an [Arproxy](https://github.com/cookpad/arproxy) module to suppress query logs for secure_ prefix tables. If there is a query log for `secure_` prefix table, Blouson conceals it.
+This proxy does not works automatically, so that you have to set `Blouson::SensitiveTableQueryLogSilencer` in your Arproxy initializer.
+
+```ruby
+require 'blouson/sensitive_table_query_log_silencer'
+# your initializers
+
+Arproxy.configure do |config|
+  config.adapter = "mysql2"
+  config.use Blouson::SensitiveTableQueryLogSilencer
+end
+Arproxy.enable!
+```
+
+### RavenParameterFilterProcessor
+Blouson provides an [Raven-Ruby](https://github.com/getsentry/raven-ruby) processor to conceal sensitive data from query string, request body, request headers and cookie values.
+
+```ruby
+require 'blouson/raven_parameter_filter_processor'
+
+filter_pattern = Rails.application.config.filter_parameters
+secure_headers = %w(secret_token)
+
+Raven.configure do |config|
+  ...
+  config.processors = [Blouson::RavenParameterFilterProcessor.create(filter_pattern, secure_headers)]
+  ...
+end
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/blouson.
+Bug reports and pull requests are welcome on GitHub at https://github.com/cookpad/blouson.
 
 
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
-
