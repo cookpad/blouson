@@ -8,11 +8,7 @@ module Blouson
     initializer 'blouson.load_helpers' do |app|
       if !Rails.env.development? && Rails.logger.level == Logger::DEBUG
         ActiveSupport.on_load(:action_controller) do
-          if ActionPack::VERSION::STRING > '4'
-            around_action Blouson::SensitiveParamsSilencer
-          else
-            around_filter Blouson::SensitiveParamsSilencer
-          end
+          around_action Blouson::SensitiveParamsSilencer
         end
       end
     end
