@@ -2,6 +2,7 @@ require "bundler/setup"
 require 'pry'
 require 'rails'
 require 'mysql2'
+require 'active_support/all'
 require 'active_record'
 require "blouson"
 
