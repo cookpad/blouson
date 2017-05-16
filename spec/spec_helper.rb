@@ -5,7 +5,7 @@ require 'mysql2'
 require 'active_record'
 require "blouson"
 
-database_config = { 'adapter'  => 'mysql2', 'database' => 'blouson_test' }
+database_config = { 'adapter'  => 'mysql2', 'database' => 'blouson_test', 'username' => 'root' }
 
 class SecureUser < ActiveRecord::Base
 end
