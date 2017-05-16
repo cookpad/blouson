@@ -1,4 +1,6 @@
 # Blouson
+[![Gem Version](https://badge.fury.io/rb/blouson.svg)](https://badge.fury.io/rb/blouson)
+[![Build Status](https://travis-ci.org/cookpad/blouson.svg?branch=master)](https://travis-ci.org/cookpad/blouson)
 
 Blouson is a filter tool for Rails to conceal sensitive data from various logs.
 
