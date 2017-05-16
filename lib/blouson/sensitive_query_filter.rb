@@ -26,7 +26,17 @@ module Blouson
             end
           end
         end
-        super(message, original_exception)
+
+        if original_exception
+          # Rails < 5.0
+          super(message, original_exception)
+        else
+          # Rails >= 5.0
+          #
+          # - https://github.com/rails/rails/pull/18774
+          # - https://github.com/rails/rails/pull/27503
+          super(message)
+        end
       end
     end
 
