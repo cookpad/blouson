@@ -3,7 +3,7 @@ module Blouson
     def self.create(filters, header_filters)
       Class.new(Raven::Processor) do
         @filters = filters
-        @header_filters = header_filters
+        @header_filters = header_filters.map(&:downcase)
 
         def self.filters
           @filters
