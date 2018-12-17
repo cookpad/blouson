@@ -156,5 +156,23 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         end
       end
     end
+
+    context 'on no database error' do
+      before do
+        dummy_nodb_error = Class.new(ActiveRecord::StatementInvalid)
+        stub_const('ActiveRecord::NoDatabaseError', dummy_nodb_error)
+      end
+
+      it 'raises ActiveRecord::NoDatabaseError' do
+        error = nil
+        begin
+          raise ActiveRecord::NoDatabaseError
+        rescue => e
+          error = e
+        end
+        expect(error.to_s).to eq('ActiveRecord::NoDatabaseError')
+        expect(error.to_s).not_to include('[FILTERED]')
+      end
+    end
   end
 end
