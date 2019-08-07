@@ -2,6 +2,7 @@ require "blouson/version"
 
 require 'blouson/sensitive_params_silener'
 require 'blouson/sensitive_query_filter'
+require 'blouson/sensitive_mail_log_filter'
 require 'blouson/engine'
 require 'blouson/tolerant_regexp'
 
