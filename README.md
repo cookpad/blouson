@@ -8,6 +8,7 @@ Blouson is a filter tool for Rails to conceal sensitive data from various logs.
 - SQL query in Rails log
 - Exception messages in `ActiveRecord::StatementInvalid`
 - Sentry Raven parameters
+- Mail parameters in Rails log
 
 ## Installation
 
@@ -78,6 +79,34 @@ Raven.configure do |config|
   config.processors = [Blouson::RavenParameterFilterProcessor.create(filter_pattern, secure_headers)]
   ...
 end
+```
+
+### SensitiveMailLogFilter
+ActionMailer outputs email address, all headers, and body text to the log when sending email.
+
+```
+D, [2019-08-08T08:40:15.939251 #67674] DEBUG -- : UserMailer#hello: processed outbound mail in 43.0ms
+I, [2019-08-08T08:40:15.946281 #67674]  INFO -- : Sent mail to xxx@example.com (6.3ms)
+D, [2019-08-08T08:40:15.946432 #67674] DEBUG -- : Date: Thu, 08 Aug 2019 08:40:15 +0900
+From: from@example.com
+To: xxx@example.com
+Message-ID: <xxx>
+Subject: Hello
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Example mail.
+```
+
+Blouson filters such logs.
+
+Example:
+
+```
+D, [2019-08-08T08:47:06.524182 #67886] DEBUG -- : UserMailer#hello: processed outbound mail in 23.2ms
+I, [2019-08-08T08:47:06.530849 #67886]  INFO -- : Sent mail to [FILTERED] (6.4ms)
+D, [2019-08-08T08:47:06.530953 #67886] DEBUG -- : [Blouson::SensitiveMailLogFilter] Mail data is filtered for sensitive data
 ```
 
 ## Contributing
