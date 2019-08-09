@@ -1,3 +1,6 @@
+# 1.1.0 (2019-08-09)
+- Add feature to filter sensitive mail logs.
+
 # 1.0.3 (2018-12-18)
 - Fix Blouson::SensitiveQueryFilter::StatementInvalidErrorFilter for exceptions created with no arguments (like ActiveRecord::NoDatabaseError)
 
