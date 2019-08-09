@@ -22,5 +22,13 @@ module Blouson
         end
       end
     end
+
+    initializer 'blouson.set_sensitive_mail_log_filter' do |app|
+      if Rails.env.production? || ENV['ENABLE_SENSITIVE_MAIL_LOG_FILTER'] == '1'
+        ActiveSupport.on_load(:action_mailer) do
+          ActionMailer::LogSubscriber.prepend Blouson::SensitiveMailLogFilter
+        end
+      end
+    end
   end
 end
