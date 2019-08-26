@@ -14,7 +14,13 @@ module Blouson
         end
 
         def initialize(client = nil)
-          @parameter_filter = ActionDispatch::Http::ParameterFilter.new(self.class.filters)
+          # ActionDispatch::Http::ParameterFilter is deprecated and will be removed from Rails 6.1.
+          parameter_filter_klass = if defined?(ActiveSupport::ParameterFilter)
+              ActiveSupport::ParameterFilter
+            else
+              ActionDispatch::Http::ParameterFilter
+            end
+          @parameter_filter = parameter_filter_klass.new(self.class.filters)
         end
 
         def process(value)
