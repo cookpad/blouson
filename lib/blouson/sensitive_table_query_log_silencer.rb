@@ -5,12 +5,9 @@ module Blouson
         return super(sql, name)
       end
 
-      begin
-        ActiveRecord::Base.logger.level = Logger::INFO
+      ActiveRecord::Base.logger.silence(Logger::INFO) do
         Rails.logger.info "  [Blouson::SensitiveTableQueryLogSilencer] SQL Log is skipped for sensitive table"
         super(sql, name)
-      ensure
-        ActiveRecord::Base.logger.level = Logger::DEBUG
       end
     end
   end
