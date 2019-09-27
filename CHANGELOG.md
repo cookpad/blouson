@@ -1,3 +1,6 @@
+# 1.1.1 (2019-09-27)
+- Change to use ActiveSupport::LoggerSilence for thread safety #10
+
 # 1.1.0 (2019-08-09)
 - Add feature to filter sensitive mail logs.
 
