@@ -1,3 +1,6 @@
+# 1.1.2 (2019-10-24)
+- Support Rails 6.0
+
 # 1.1.1 (2019-09-27)
 - Change to use ActiveSupport::LoggerSilence for thread safety #10
 
