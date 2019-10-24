@@ -21,19 +21,40 @@ RSpec.describe Blouson::SensitiveQueryFilter do
       let(:condition) { { invalid_column: email } }
 
       it 'filters SQL statement' do
-        expect { model_class.where(condition).first }.to raise_error(/SELECT.*\[FILTERED\]/)
+        if Rails::VERSION::MAJOR >= 6
+          expect { model_class.where(condition).first }.to raise_error(/\[FILTERED\]/)
+        else
+          expect { model_class.where(condition).first }.to raise_error(/SELECT.*\[FILTERED\]/)
+        end
       end
 
       it 'filters to_s message' do
-        expect(error.to_s).to include('SELECT')
-        expect(error.to_s).not_to include(email)
-        expect(error.to_s).to include('[FILTERED]')
+        if Rails::VERSION::MAJOR >= 6
+          expect(error.to_s).not_to include(email)
+          expect(error.to_s).to include('[FILTERED]')
+        else
+          expect(error.to_s).to include('SELECT')
+          expect(error.to_s).not_to include(email)
+          expect(error.to_s).to include('[FILTERED]')
+        end
       end
 
       it 'filters inspect message' do
-        expect(error.to_s).to include('SELECT')
-        expect(error.to_s).not_to include(email)
-        expect(error.inspect).to include('[FILTERED]')
+        if Rails::VERSION::MAJOR >= 6
+          expect(error.inspect).to include('[FILTERED]')
+        else
+          expect(error.to_s).to include('SELECT')
+          expect(error.to_s).not_to include(email)
+          expect(error.inspect).to include('[FILTERED]')
+        end
+      end
+
+      if Rails::VERSION::MAJOR >= 6
+        it 'filters sql message' do
+          expect(error.sql).to include('SELECT')
+          expect(error.sql).not_to include(email)
+          expect(error.sql).to include('[FILTERED]')
+        end
       end
 
       it 'filters double quoted queries' do
@@ -43,18 +64,35 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         rescue => e
           error = e
         end
-        expect(error.to_s).to include('SELECT')
-        expect(error.to_s).not_to include(email)
-        expect(error.to_s).to include('[FILTERED]')
+        if Rails::VERSION::MAJOR >= 6
+          expect(error.to_s).not_to include(email)
+          expect(error.to_s).to include('[FILTERED]')
+
+          expect(error.sql).to include('SELECT')
+          expect(error.sql).not_to include(email)
+          expect(error.sql).to include('[FILTERED]')
+        else
+          expect(error.to_s).to include('SELECT')
+          expect(error.to_s).not_to include(email)
+          expect(error.to_s).to include('[FILTERED]')
+        end
       end
 
       context 'with quote escaped query' do
         let(:email) { "'alice'@example'.com''" }
 
         it 'filters sensitive data' do
-          expect(error.to_s).to include('SELECT')
-          expect(error.to_s).not_to include('alice')
-          expect(error.to_s).to include("`secure_users`.`invalid_column` = '[FILTERED]' ")
+          if Rails::VERSION::MAJOR >= 6
+            expect(error.to_s).not_to include('alice')
+
+            expect(error.sql).to include('SELECT')
+            expect(error.sql).not_to include('alice')
+            expect(error.sql).to include("`secure_users`.`invalid_column` = '[FILTERED]' ")
+          else
+            expect(error.to_s).to include('SELECT')
+            expect(error.to_s).not_to include('alice')
+            expect(error.to_s).to include("`secure_users`.`invalid_column` = '[FILTERED]' ")
+          end
         end
       end
 
@@ -63,10 +101,19 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         let(:condition) { { invalid_column: email, email2: email } }
 
         it 'filters sensitive data' do
-          expect(error.to_s).to include('SELECT')
-          expect(error.to_s).not_to include('alice')
-          expect(error.to_s).to include("`secure_users`.`invalid_column` = '[FILTERED]' ")
-          expect(error.to_s).to include("`secure_users`.`email2` = '[FILTERED]' ")
+          if Rails::VERSION::MAJOR >= 6
+            expect(error.to_s).not_to include('alice')
+
+            expect(error.sql).to include('SELECT')
+            expect(error.sql).not_to include('alice')
+            expect(error.sql).to include("`secure_users`.`invalid_column` = '[FILTERED]' ")
+            expect(error.sql).to include("`secure_users`.`email2` = '[FILTERED]' ")
+          else
+            expect(error.to_s).to include('SELECT')
+            expect(error.to_s).not_to include('alice')
+            expect(error.to_s).to include("`secure_users`.`invalid_column` = '[FILTERED]' ")
+            expect(error.to_s).to include("`secure_users`.`email2` = '[FILTERED]' ")
+          end
         end
       end
 
@@ -87,8 +134,15 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         it 'filters sensitive data' do
           expect { model_class.create!(email: email, email2: email) }.to raise_error { |e|
             expect(e).to be_a(ActiveRecord::RecordNotUnique)
-            expect(e.message).to include('INSERT INTO `secure_users` ')
-            expect(e.message).to_not include('alice')
+            if Rails::VERSION::MAJOR >= 6
+              expect(e.message).to_not include('alice')
+
+              expect(e.sql).to include('INSERT INTO `secure_users` ')
+              expect(e.sql).to_not include('alice')
+            else
+              expect(e.message).to include('INSERT INTO `secure_users` ')
+              expect(e.message).to_not include('alice')
+            end
           }
         end
 
@@ -108,19 +162,40 @@ RSpec.describe Blouson::SensitiveQueryFilter do
       let(:condition) { { invalid_column: name } }
 
       it 'does not filter SQL statement' do
-        expect { model_class.where(condition).first }.to raise_error(/SELECT.*#{name}/)
+        if Rails::VERSION::MAJOR >= 6
+          expect { model_class.where(condition).first }.to raise_error(/Unknown column 'users.invalid_column'/)
+        else
+          expect { model_class.where(condition).first }.to raise_error(/Unknown column 'users.invalid_column'/)
+          expect { model_class.where(condition).first }.to raise_error(/SELECT.*#{name}/)
+        end
       end
 
       it 'does not filter to_s' do
-        expect(error.to_s).to include('SELECT')
-        expect(error.to_s).to include(name)
-        expect(error.to_s).not_to include('[FILTERED]')
+        if Rails::VERSION::MAJOR >= 6
+          expect(error.to_s).not_to include('[FILTERED]')
+        else
+          expect(error.to_s).to include('SELECT')
+          expect(error.to_s).to include(name)
+          expect(error.to_s).not_to include('[FILTERED]')
+        end
       end
 
       it 'does not filter inspect message' do
-        expect(error.to_s).to include('SELECT')
-        expect(error.to_s).to include(name)
-        expect(error.inspect).not_to include('[FILTERED]')
+        if Rails::VERSION::MAJOR >= 6
+          expect(error.inspect).not_to include('[FILTERED]')
+        else
+          expect(error.to_s).to include('SELECT')
+          expect(error.to_s).to include(name)
+          expect(error.inspect).not_to include('[FILTERED]')
+        end
+      end
+
+      if Rails::VERSION::MAJOR >= 6
+        it 'does not filter sql message' do
+          expect(error.sql).to include('SELECT')
+          expect(error.sql).to include(name)
+          expect(error.sql).not_to include('[FILTERED]')
+        end
       end
 
       context 'with non-sensitive value in Mysql2::Error' do
@@ -140,9 +215,19 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         it 'does not filter message' do
           expect { model_class.create!(name: name) }.to raise_error { |e|
             expect(e).to be_a(ActiveRecord::RecordNotUnique)
-            expect(e.message).to include('INSERT INTO `users` ')
-            expect(e.message).to include(name)
-            expect(e.message).to_not include('[FILTERED]')
+
+            if Rails::VERSION::MAJOR >= 6
+              expect(e.message).to include(name)
+              expect(e.message).to_not include('[FILTERED]')
+
+              expect(e.sql).to include('INSERT INTO `users` ')
+              expect(e.sql).to include(name)
+              expect(e.sql).to_not include('[FILTERED]')
+            else
+              expect(e.message).to include('INSERT INTO `users` ')
+              expect(e.message).to include(name)
+              expect(e.message).to_not include('[FILTERED]')
+            end
           }
         end
 
