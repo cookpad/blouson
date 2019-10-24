@@ -16,7 +16,7 @@ module Blouson
 
     module StatementInvalidErrorFilter
       def initialize(message = nil, original_exception = nil, sql: nil, binds: nil)
-        if SensitiveQueryFilter.contain_sensitive_query?(message) || (sql && SensitiveQueryFilter.contain_sensitive_query?(sql))
+        if SensitiveQueryFilter.contain_sensitive_query?(message) || (SensitiveQueryFilter.contain_sensitive_query?(sql))
           message = SensitiveQueryFilter.filter_sensitive_words(message) if message
           sql = SensitiveQueryFilter.filter_sensitive_words(sql) if sql
           if defined?(Mysql2::Error)
