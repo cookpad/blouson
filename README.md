@@ -76,7 +76,7 @@ secure_headers = %w(secret_token)
 
 Raven.configure do |config|
   ...
-  config.processors = [Blouson::RavenParameterFilterProcessor.create(filter_pattern, secure_headers)]
+  config.processors << Blouson::RavenParameterFilterProcessor.create(filter_pattern, secure_headers)
   ...
 end
 ```
