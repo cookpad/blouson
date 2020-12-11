@@ -1,3 +1,6 @@
+# 1.1.3 (2020-12-11)
+- Fix cookies not being filtered when used with Raven::Rack
+
 # 1.1.2 (2019-10-24)
 - Support Rails 6.0
 
