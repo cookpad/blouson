@@ -71,6 +71,10 @@ module Blouson
         end
 
         def process_cookie(value)
+          if (cookies = value.dig(:request, :cookies))
+            value[:request][:cookies] = @parameter_filter.filter(cookies)
+          end
+
           if value[:request] && value[:request][:headers] && value[:request][:headers]['Cookie']
             cookies  = Hash[value[:request][:headers]['Cookie'].split('; ').map { |pair| pair.split('=', 2) }]
             filtered = @parameter_filter.filter(cookies)
