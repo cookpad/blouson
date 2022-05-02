@@ -1,3 +1,6 @@
+# 1.1.4 (2022-05-02)
+- Fix ArgumentError on activerecord 7.0
+
 # 1.1.3 (2020-12-11)
 - Fix cookies not being filtered when used with Raven::Rack
 
