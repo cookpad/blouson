@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'arproxy'
   spec.add_development_dependency 'mysql2'
   spec.add_development_dependency 'pry'
+  spec.add_development_dependency 'sentry-ruby'
 
   spec.add_development_dependency 'appraisal'
   spec.add_development_dependency "bundler", ">= 1.14"
