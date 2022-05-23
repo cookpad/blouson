@@ -1,3 +1,7 @@
+# 2.0.0 (2022-05-23)
+- Support parameter filter for `sentry-ruby` gem
+- [Breaking change] Drop dependency of `sentry-raven` gem
+
 # 1.1.4 (2022-05-02)
 - Fix ArgumentError on activerecord 7.0
 
