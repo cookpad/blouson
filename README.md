@@ -65,6 +65,28 @@ end
 Arproxy.enable!
 ```
 
+### SentryParameterFilter
+Blouson provides an [sentry-ruby](https://github.com/getsentry/sentry-ruby) filter to conceal sensitive data from query string, request body, request headers and cookie values.
+
+```ruby
+require 'sentry-ruby'
+require 'blouson/sentry_parameter_filter'
+
+Sentry.init do |config|
+  # Enable `send_default_pii` to send the filtered sensitive information.
+  config.send_default_pii = true
+
+  filter_pattern = Rails.application.config.filter_parameters
+  secure_headers = %w(secret_token)
+  filter = Blouson::SentryParameterFilter.new(filter_pattern, secure_headers)
+
+  config.before_send = lambda do |event, _hint|
+    filter.process(event.to_hash)
+  end
+end
+
+```
+
 ### RavenParameterFilterProcessor
 Blouson provides an [Raven-Ruby](https://github.com/getsentry/raven-ruby) processor to conceal sensitive data from query string, request body, request headers and cookie values.
 
@@ -80,6 +102,7 @@ Raven.configure do |config|
   ...
 end
 ```
+
 
 ### SensitiveMailLogFilter
 ActionMailer outputs email address, all headers, and body text to the log when sending email.

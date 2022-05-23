@@ -22,11 +22,12 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency 'rails', '>= 4.0.0'
-  spec.add_dependency 'sentry-raven'
 
   spec.add_development_dependency 'arproxy'
   spec.add_development_dependency 'mysql2'
   spec.add_development_dependency 'pry'
+  spec.add_development_dependency 'sentry-raven'
+  spec.add_development_dependency 'sentry-ruby'
 
   spec.add_development_dependency 'appraisal'
   spec.add_development_dependency "bundler", ">= 1.14"
