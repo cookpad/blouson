@@ -1,5 +1,12 @@
 require 'spec_helper'
 
+# FIXME: This is a workaround for Rails 7.1
+if Rails::VERSION::MAJOR >= 7 && Rails::VERSION::MINOR >= 1
+  ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval do
+    prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter
+  end
+end
+
 RSpec.describe Blouson::SensitiveQueryFilter do
   describe 'StatementInvalidErrorFilter' do
       def error
