@@ -1,12 +1,5 @@
 require 'spec_helper'
 
-# FIXME: This is a workaround for Rails 7.1
-if Rails::VERSION::MAJOR >= 7 && Rails::VERSION::MINOR >= 1
-  ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval do
-    prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter
-  end
-end
-
 RSpec.describe Blouson::SensitiveQueryFilter do
   describe 'StatementInvalidErrorFilter' do
       def error
@@ -131,6 +124,20 @@ RSpec.describe Blouson::SensitiveQueryFilter do
           end
           stub_const('ActiveRecord::RecordNotUnique', dummy_error)
 
+          if Rails::VERSION::MAJOR >= 7 && Rails::VERSION::MINOR >= 1
+            allow_any_instance_of(ActiveRecord::ConnectionAdapters::Mysql2Adapter).to receive(:log) do |_, sql, name = "SQL", binds = [], _ = [], _ = nil, async: false, &block|
+              begin
+                block.call
+              rescue ActiveRecord::RecordNotUnique => ex
+                if ex.cause.is_a?(Mysql2::Error)
+                  ex.cause.extend(Blouson::SensitiveQueryFilter::Mysql2Filter)
+                elsif $!.is_a?(Mysql2::Error)
+                  $!.extend(Blouson::SensitiveQueryFilter::Mysql2Filter)
+                end
+                raise ex.set_query(sql, binds)
+              end
+            end
+          end
           model_class.create!(email: email, email2: email)
         end
 
@@ -211,6 +218,21 @@ RSpec.describe Blouson::SensitiveQueryFilter do
             prepend Blouson::SensitiveQueryFilter::StatementInvalidErrorFilter
           end
           stub_const('ActiveRecord::RecordNotUnique', dummy_error)
+
+          if Rails::VERSION::MAJOR >= 7 && Rails::VERSION::MINOR >= 1
+            allow_any_instance_of(ActiveRecord::ConnectionAdapters::Mysql2Adapter).to receive(:log) do |_, sql, name = "SQL", binds = [], _ = [], _ = nil, async: false, &block|
+              begin
+                block.call
+              rescue ActiveRecord::RecordNotUnique => ex
+                if ex.cause.is_a?(Mysql2::Error)
+                  ex.cause.extend(Blouson::SensitiveQueryFilter::Mysql2Filter)
+                elsif $!.is_a?(Mysql2::Error)
+                  $!.extend(Blouson::SensitiveQueryFilter::Mysql2Filter)
+                end
+                raise ex.set_query(sql, binds)
+              end
+            end
+          end
 
           model_class.create!(name: name)
         end
