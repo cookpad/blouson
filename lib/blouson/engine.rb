@@ -19,6 +19,11 @@ module Blouson
           ActiveRecord::StatementInvalid.class_eval do
             prepend Blouson::SensitiveQueryFilter::StatementInvalidErrorFilter
           end
+          if Rails::VERSION::MAJOR >= 7 && Rails::VERSION::MINOR >= 1 && defined?(Mysql2::Error)
+            ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval do
+              prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter
+            end
+          end
         end
       end
     end

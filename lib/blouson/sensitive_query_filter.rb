@@ -15,7 +15,7 @@ module Blouson
     end
 
     module StatementInvalidErrorFilter
-      def initialize(message = nil, original_exception = nil, sql: nil, binds: nil)
+      def initialize(message = nil, original_exception = nil, sql: nil, binds: nil, connection_pool: nil)
         if SensitiveQueryFilter.contain_sensitive_query?(message) || (SensitiveQueryFilter.contain_sensitive_query?(sql))
           message = SensitiveQueryFilter.filter_sensitive_words(message) if message
           sql = SensitiveQueryFilter.filter_sensitive_words(sql) if sql
@@ -31,6 +31,11 @@ module Blouson
         if original_exception
           # Rails < 5.0
           super(message, original_exception)
+        elsif connection_pool
+          # Rails >= 7.1
+          #
+          # - https://github.com/rails/rails/pull/48295
+          super(message, sql: sql, binds: binds, connection_pool: connection_pool)
         elsif sql
           # Rails >= 6.0
           #
@@ -44,6 +49,22 @@ module Blouson
           super(message)
         end
       end
+
+      def set_query(sql, binds)
+        if SensitiveQueryFilter.contain_sensitive_query?(sql)
+          super(SensitiveQueryFilter.filter_sensitive_words(sql), binds)
+        else
+          super(sql, binds)
+        end
+      end
+
+      def to_s
+        if SensitiveQueryFilter.contain_sensitive_query?(sql)
+          SensitiveQueryFilter.filter_sensitive_words(super)
+        else
+          super
+        end
+      end
     end
 
     module Mysql2Filter
@@ -51,5 +72,20 @@ module Blouson
         SensitiveQueryFilter.filter_sensitive_words(super)
       end
     end
-  end
+
+    module AbstractAdapterFilter
+      def log(sql, name = "SQL", binds = [], type_casted_binds = [], statement_name = nil, async: false, &block)
+        super(sql, name, binds, type_casted_binds, statement_name, async: false, &block)
+      rescue ActiveRecord::RecordNotUnique, Mysql2::Error => ex
+        if ex.cause.is_a?(Mysql2::Error)
+          ex.cause.extend(Mysql2Filter)
+        elsif $!.is_a?(Mysql2::Error)
+          $!.extend(Mysql2Filter)
+        end
+        raise ex.set_query(sql, binds)
+      end
+
+      private :log
+    end
+    end
 end
