@@ -6,7 +6,7 @@ module Blouson
 
     # We have to prevent logging sensitive data in SQL if production mode and logger level is debug
     initializer 'blouson.load_helpers' do |app|
-      if !Rails.env.development? && Rails.logger.level == Logger::DEBUG
+      if !Rails.env.development? && Rails.logger.debug?
         ActiveSupport.on_load(:action_controller) do
           around_action Blouson::SensitiveParamsSilencer
         end
