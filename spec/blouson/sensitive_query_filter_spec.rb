@@ -118,26 +118,25 @@ RSpec.describe Blouson::SensitiveQueryFilter do
       end
 
       context 'with sensitive value in Mysql2::Error' do
+        if Rails::VERSION::MAJOR >= 7 && Rails::VERSION::MINOR >= 1
+          around do |example|
+            cloned_adapter = ActiveRecord::ConnectionAdapters::AbstractAdapter.clone
+            ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval do
+              prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter
+            end
+            example.run
+            # Prepended AbstractAdapter can't reset. so we need to remove and reassign the original
+            ActiveRecord::ConnectionAdapters.send(:remove_const, :AbstractAdapter)
+            ActiveRecord::ConnectionAdapters::AbstractAdapter = cloned_adapter
+          end
+        end
+
         before do
           dummy_error = Class.new(ActiveRecord::RecordNotUnique) do
             prepend Blouson::SensitiveQueryFilter::StatementInvalidErrorFilter
           end
           stub_const('ActiveRecord::RecordNotUnique', dummy_error)
 
-          if Rails::VERSION::MAJOR >= 7 && Rails::VERSION::MINOR >= 1
-            allow_any_instance_of(ActiveRecord::ConnectionAdapters::Mysql2Adapter).to receive(:log) do |_, sql, name = "SQL", binds = [], _ = [], _ = nil, async: false, &block|
-              begin
-                block.call
-              rescue ActiveRecord::RecordNotUnique => ex
-                if ex.cause.is_a?(Mysql2::Error)
-                  ex.cause.extend(Blouson::SensitiveQueryFilter::Mysql2Filter)
-                elsif $!.is_a?(Mysql2::Error)
-                  $!.extend(Blouson::SensitiveQueryFilter::Mysql2Filter)
-                end
-                raise ex.set_query(sql, binds)
-              end
-            end
-          end
           model_class.create!(email: email, email2: email)
         end
 
