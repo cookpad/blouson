@@ -71,7 +71,7 @@ module Blouson
         elsif $!.is_a?(Mysql2::Error)
           $!.extend(Mysql2Filter)
         end
-        raise ex.set_query(sql, binds)
+        raise ex
       end
 
       private :log
