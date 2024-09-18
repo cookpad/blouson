@@ -1,3 +1,13 @@
+# 3.0.0 (2024-09-18)
+- [Breaking change] Drop support for Ruby 2.6
+- [Breaking change] Drop support for Rails 5.0, 5.1, and 5.2
+- Support Ruby 3.2 and 3.3
+- Support Rails 7.1
+- [Breaking change] blouson/sensitive_params_silener is renamed to blouson/sensitive_params_silencer
+- Use `Rails.logger.debug?` for loggers other than the default Logger class
+- Run tests with MySQL 8.4 instead of 5.7
+- Ignore lockfiles for Appraisal for the development
+
 # 2.0.0 (2022-05-23)
 - Support parameter filter for `sentry-ruby` gem
 - [Breaking change] Drop dependency of `sentry-raven` gem
