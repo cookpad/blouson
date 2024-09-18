@@ -1,19 +1,22 @@
 require 'spec_helper'
 
+if ActiveRecord.version >= Gem::Version.new('7.1') && defined?(Mysql2::Error)
+  ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval do
+    prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter
+  end
+end
+
+ActiveRecord::StatementInvalid.class_eval do
+  prepend Blouson::SensitiveQueryFilter::StatementInvalidErrorFilter
+end
+
 RSpec.describe Blouson::SensitiveQueryFilter do
   describe 'StatementInvalidErrorFilter' do
-      def error
-        model_class.where(condition).first
-      rescue => e
-        return e
-      end
-
-      before do
-        dummy_error = Class.new(ActiveRecord::StatementInvalid) do
-          prepend Blouson::SensitiveQueryFilter::StatementInvalidErrorFilter
-        end
-        stub_const('ActiveRecord::StatementInvalid', dummy_error)
-      end
+    def error
+      model_class.where(condition).first
+    rescue => e
+      return e
+    end
 
     context 'with query to sensitive table' do
       let(:model_class) { SecureUser }
@@ -21,7 +24,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
       let(:condition) { { invalid_column: email } }
 
       it 'filters SQL statement' do
-        if Rails::VERSION::MAJOR >= 6
+        if ActiveRecord::VERSION::MAJOR >= 6
           expect { model_class.where(condition).first }.to raise_error(/\[FILTERED\]/)
         else
           expect { model_class.where(condition).first }.to raise_error(/SELECT.*\[FILTERED\]/)
@@ -29,7 +32,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
       end
 
       it 'filters to_s message' do
-        if Rails::VERSION::MAJOR >= 6
+        if ActiveRecord::VERSION::MAJOR >= 6
           expect(error.to_s).not_to include(email)
           expect(error.to_s).to include('[FILTERED]')
         else
@@ -40,7 +43,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
       end
 
       it 'filters inspect message' do
-        if Rails::VERSION::MAJOR >= 6
+        if ActiveRecord::VERSION::MAJOR >= 6
           expect(error.inspect).to include('[FILTERED]')
         else
           expect(error.to_s).to include('SELECT')
@@ -49,7 +52,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         end
       end
 
-      if Rails::VERSION::MAJOR >= 6
+      if ActiveRecord::VERSION::MAJOR >= 6
         it 'filters sql message' do
           expect(error.sql).to include('SELECT')
           expect(error.sql).not_to include(email)
@@ -64,7 +67,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         rescue => e
           error = e
         end
-        if Rails::VERSION::MAJOR >= 6
+        if ActiveRecord::VERSION::MAJOR >= 6
           expect(error.to_s).not_to include(email)
           expect(error.to_s).to include('[FILTERED]')
 
@@ -82,7 +85,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         let(:email) { "'alice'@example'.com''" }
 
         it 'filters sensitive data' do
-          if Rails::VERSION::MAJOR >= 6
+          if ActiveRecord::VERSION::MAJOR >= 6
             expect(error.to_s).not_to include('alice')
 
             expect(error.sql).to include('SELECT')
@@ -101,7 +104,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         let(:condition) { { invalid_column: email, email2: email } }
 
         it 'filters sensitive data' do
-          if Rails::VERSION::MAJOR >= 6
+          if ActiveRecord::VERSION::MAJOR >= 6
             expect(error.to_s).not_to include('alice')
 
             expect(error.sql).to include('SELECT')
@@ -119,11 +122,6 @@ RSpec.describe Blouson::SensitiveQueryFilter do
 
       context 'with sensitive value in Mysql2::Error' do
         before do
-          dummy_error = Class.new(ActiveRecord::RecordNotUnique) do
-            prepend Blouson::SensitiveQueryFilter::StatementInvalidErrorFilter
-          end
-          stub_const('ActiveRecord::RecordNotUnique', dummy_error)
-
           model_class.create!(email: email, email2: email)
         end
 
@@ -134,7 +132,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         it 'filters sensitive data' do
           expect { model_class.create!(email: email, email2: email) }.to raise_error { |e|
             expect(e).to be_a(ActiveRecord::RecordNotUnique)
-            if Rails::VERSION::MAJOR >= 6
+            if ActiveRecord::VERSION::MAJOR >= 6
               expect(e.message).to_not include('alice')
 
               expect(e.sql).to include('INSERT INTO `secure_users` ')
@@ -162,7 +160,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
       let(:condition) { { invalid_column: name } }
 
       it 'does not filter SQL statement' do
-        if Rails::VERSION::MAJOR >= 6
+        if ActiveRecord::VERSION::MAJOR >= 6
           expect { model_class.where(condition).first }.to raise_error(/Unknown column 'users.invalid_column'/)
         else
           expect { model_class.where(condition).first }.to raise_error(/Unknown column 'users.invalid_column'/)
@@ -171,7 +169,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
       end
 
       it 'does not filter to_s' do
-        if Rails::VERSION::MAJOR >= 6
+        if ActiveRecord::VERSION::MAJOR >= 6
           expect(error.to_s).not_to include('[FILTERED]')
         else
           expect(error.to_s).to include('SELECT')
@@ -181,7 +179,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
       end
 
       it 'does not filter inspect message' do
-        if Rails::VERSION::MAJOR >= 6
+        if ActiveRecord::VERSION::MAJOR >= 6
           expect(error.inspect).not_to include('[FILTERED]')
         else
           expect(error.to_s).to include('SELECT')
@@ -190,7 +188,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
         end
       end
 
-      if Rails::VERSION::MAJOR >= 6
+      if ActiveRecord::VERSION::MAJOR >= 6
         it 'does not filter sql message' do
           expect(error.sql).to include('SELECT')
           expect(error.sql).to include(name)
@@ -200,11 +198,6 @@ RSpec.describe Blouson::SensitiveQueryFilter do
 
       context 'with non-sensitive value in Mysql2::Error' do
         before do
-          dummy_error = Class.new(ActiveRecord::RecordNotUnique) do
-            prepend Blouson::SensitiveQueryFilter::StatementInvalidErrorFilter
-          end
-          stub_const('ActiveRecord::RecordNotUnique', dummy_error)
-
           model_class.create!(name: name)
         end
 
@@ -216,7 +209,7 @@ RSpec.describe Blouson::SensitiveQueryFilter do
           expect { model_class.create!(name: name) }.to raise_error { |e|
             expect(e).to be_a(ActiveRecord::RecordNotUnique)
 
-            if Rails::VERSION::MAJOR >= 6
+            if ActiveRecord::VERSION::MAJOR >= 6
               expect(e.message).to include(name)
               expect(e.message).to_not include('[FILTERED]')
 
