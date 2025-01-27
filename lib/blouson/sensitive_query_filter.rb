@@ -64,7 +64,11 @@ module Blouson
 
     module AbstractAdapterFilter
       def log(sql, name = "SQL", binds = [], type_casted_binds = [], statement_name = nil, async: false, &block)
-        super(sql, name, binds, type_casted_binds, statement_name, async: false, &block)
+        if Rails::VERSION::MAJOR >= 8
+          super(sql, name, binds, type_casted_binds, async: false, &block)
+        else
+          super(sql, name, binds, type_casted_binds, statement_name, async: false, &block)
+        end
       rescue ActiveRecord::RecordNotUnique, Mysql2::Error => ex
         if ex.cause.is_a?(Mysql2::Error)
           ex.cause.extend(Mysql2Filter)
