@@ -1,3 +1,10 @@
+# 4.0.0 (2025-02-04)
+- [Breaking change] Drop support for arproxy v0. Please update >= v1
+- [Breaking change] Drop support for Ruby 2.7
+- [Breaking change] Drop support for Rails 6.0 & 6.1
+- Support Ruby 3.4
+- Support Rails 7.2 & 8.0
+
 # 3.0.0 (2024-09-18)
 - [Breaking change] Drop support for Ruby 2.6
 - [Breaking change] Drop support for Rails 5.0, 5.1, and 5.2
