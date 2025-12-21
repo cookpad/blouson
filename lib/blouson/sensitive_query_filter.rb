@@ -26,17 +26,7 @@ module Blouson
           end
         end
 
-        if connection_pool
-          # Rails >= 7.1
-          #
-          # - https://github.com/rails/rails/pull/48295
-          super(message, sql: sql, binds: binds, connection_pool: connection_pool)
-        else
-          # Rails >= 6.0
-          #
-          # - https://github.com/rails/rails/pull/34468
-          super(message, sql: sql, binds: binds)
-        end
+        super(message, sql:, binds:, connection_pool:)
       end
 
       def set_query(sql, binds)
