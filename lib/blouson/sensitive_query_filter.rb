@@ -52,15 +52,10 @@ module Blouson
       end
     end
 
-    module AbstractAdapterFilter
-      def log(sql, name = "SQL", binds = [], type_casted_binds = [], statement_name = nil, async: false, allow_retry: false, &block)
-        if ActiveRecord.gem_version >= '8.1'
-          super(sql, name, binds, type_casted_binds, async:, allow_retry:, &block)
-        elsif ActiveRecord.gem_version >= '8.0'
-          super(sql, name, binds, type_casted_binds, async:, &block)
-        else
-          super(sql, name, binds, type_casted_binds, statement_name, async:, &block)
-        end
+    module AbstractAdapterFilter71
+      # https://github.com/rails/rails/blob/v7.1.0/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb#L1133
+      def log(sql, name = "SQL", binds = [], type_casted_binds = [], statement_name = nil, async: false, &block)
+        super(sql, name, binds, type_casted_binds, statement_name, async:, &block)
       rescue ActiveRecord::RecordNotUnique, Mysql2::Error => ex
         if ex.cause.is_a?(Mysql2::Error)
           ex.cause.extend(Mysql2Filter)
@@ -69,7 +64,36 @@ module Blouson
         end
         raise ex
       end
+      private :log
+    end
 
+    module AbstractAdapterFilter80
+      # https://github.com/rails/rails/blob/v8.0.0/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb#L1128
+      def log(sql, name = "SQL", binds = [], type_casted_binds = [], async: false, &block)
+        super(sql, name, binds, type_casted_binds, async:, &block)
+      rescue ActiveRecord::RecordNotUnique, Mysql2::Error => ex
+        if ex.cause.is_a?(Mysql2::Error)
+          ex.cause.extend(Mysql2Filter)
+        elsif $!.is_a?(Mysql2::Error)
+          $!.extend(Mysql2Filter)
+        end
+        raise ex
+      end
+      private :log
+    end
+
+    module AbstractAdapterFilter81
+      # https://github.com/rails/rails/blob/v8.1.0/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb#L1200
+      def log(sql, name = "SQL", binds = [], type_casted_binds = [], async: false, allow_retry: false, &block)
+        super(sql, name, binds, type_casted_binds, async:, allow_retry:, &block)
+      rescue ActiveRecord::RecordNotUnique, Mysql2::Error => ex
+        if ex.cause.is_a?(Mysql2::Error)
+          ex.cause.extend(Mysql2Filter)
+        elsif $!.is_a?(Mysql2::Error)
+          $!.extend(Mysql2Filter)
+        end
+        raise ex
+      end
       private :log
     end
   end

@@ -1,8 +1,14 @@
 require 'spec_helper'
 
-if ActiveRecord.version >= Gem::Version.new('7.1') && defined?(Mysql2::Error)
+if ActiveRecord.gem_version >= '7.1' && defined?(Mysql2::Error)
   ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval do
-    prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter
+    if ActiveRecord.gem_version >= '8.1'
+      prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter81
+    elsif ActiveRecord.gem_version >= '8.0'
+      prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter80
+    else
+      prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter71
+    end
   end
 end
 
