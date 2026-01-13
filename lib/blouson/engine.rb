@@ -21,7 +21,13 @@ module Blouson
           end
           if ActiveRecord.gem_version >= Gem::Version.new('7.1') && defined?(Mysql2::Error)
             ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval do
-              prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter
+              if ActiveRecord.gem_version >= Gem::Version.new('8.1')
+                prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter81
+              elsif ActiveRecord.gem_version >= Gem::Version.new('8.0')
+                prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter80
+              else
+                prepend Blouson::SensitiveQueryFilter::AbstractAdapterFilter71
+              end
             end
           end
         end

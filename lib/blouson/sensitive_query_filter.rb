@@ -26,17 +26,7 @@ module Blouson
           end
         end
 
-        if connection_pool
-          # Rails >= 7.1
-          #
-          # - https://github.com/rails/rails/pull/48295
-          super(message, sql: sql, binds: binds, connection_pool: connection_pool)
-        else
-          # Rails >= 6.0
-          #
-          # - https://github.com/rails/rails/pull/34468
-          super(message, sql: sql, binds: binds)
-        end
+        super(message, sql:, binds:, connection_pool:)
       end
 
       def set_query(sql, binds)
@@ -62,13 +52,10 @@ module Blouson
       end
     end
 
-    module AbstractAdapterFilter
+    module AbstractAdapterFilter71
+      # https://github.com/rails/rails/blob/v7.1.0/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb#L1133
       def log(sql, name = "SQL", binds = [], type_casted_binds = [], statement_name = nil, async: false, &block)
-        if Rails::VERSION::MAJOR >= 8
-          super(sql, name, binds, type_casted_binds, async: false, &block)
-        else
-          super(sql, name, binds, type_casted_binds, statement_name, async: false, &block)
-        end
+        super(sql, name, binds, type_casted_binds, statement_name, async:, &block)
       rescue ActiveRecord::RecordNotUnique, Mysql2::Error => ex
         if ex.cause.is_a?(Mysql2::Error)
           ex.cause.extend(Mysql2Filter)
@@ -77,7 +64,36 @@ module Blouson
         end
         raise ex
       end
+      private :log
+    end
 
+    module AbstractAdapterFilter80
+      # https://github.com/rails/rails/blob/v8.0.0/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb#L1128
+      def log(sql, name = "SQL", binds = [], type_casted_binds = [], async: false, &block)
+        super(sql, name, binds, type_casted_binds, async:, &block)
+      rescue ActiveRecord::RecordNotUnique, Mysql2::Error => ex
+        if ex.cause.is_a?(Mysql2::Error)
+          ex.cause.extend(Mysql2Filter)
+        elsif $!.is_a?(Mysql2::Error)
+          $!.extend(Mysql2Filter)
+        end
+        raise ex
+      end
+      private :log
+    end
+
+    module AbstractAdapterFilter81
+      # https://github.com/rails/rails/blob/v8.1.0/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb#L1200
+      def log(sql, name = "SQL", binds = [], type_casted_binds = [], async: false, allow_retry: false, &block)
+        super(sql, name, binds, type_casted_binds, async:, allow_retry:, &block)
+      rescue ActiveRecord::RecordNotUnique, Mysql2::Error => ex
+        if ex.cause.is_a?(Mysql2::Error)
+          ex.cause.extend(Mysql2Filter)
+        elsif $!.is_a?(Mysql2::Error)
+          $!.extend(Mysql2Filter)
+        end
+        raise ex
+      end
       private :log
     end
   end

@@ -1,13 +1,7 @@
 module Blouson
   class SentryParameterFilter
     def initialize(filters, header_filters = [])
-      # ActionDispatch::Http::ParameterFilter is deprecated and will be removed from Rails 6.1.
-      parameter_filter_klass = if defined?(ActiveSupport::ParameterFilter)
-                                 ActiveSupport::ParameterFilter
-                               else
-                                 ActionDispatch::Http::ParameterFilter
-                               end
-      @parameter_filter = parameter_filter_klass.new(filters)
+      @parameter_filter = ActiveSupport::ParameterFilter.new(filters)
       @header_filters = header_filters.map(&:downcase)
     end
 
