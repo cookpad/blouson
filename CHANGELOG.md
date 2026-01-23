@@ -1,3 +1,9 @@
+# 5.0.0 (2026-01-23)
+- [Breaking change] Drop support for Ruby 3.0
+- [Breaking change] Drop support for Rails 7.0
+- Support Rails 8.1
+- Fix version matching errors; Blouson::SensitiveQueryFilter::AbstractAdapterFilter was not loaded with Rails 8.0
+
 # 4.0.0 (2025-02-04)
 - [Breaking change] Drop support for arproxy v0. Please update >= v1
 - [Breaking change] Drop support for Ruby 2.7
