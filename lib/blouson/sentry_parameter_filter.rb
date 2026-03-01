@@ -17,53 +17,58 @@ module Blouson
     private
 
     def process_request_body(event)
-      if event[:request] && event[:request][:data].present?
-        data = event[:request][:data]
-        if data.is_a?(String)
-          # Maybe JSON request
-          begin
-            data = JSON.parse(data)
-            event[:request][:data] = JSON.dump(@parameter_filter.filter(data))
-          rescue JSON::ParserError => e
-            # Record parser error to extra field
-            event[:extra]['BlousonError'] = e.message
-          end
-        else
-          event[:request][:data] = @parameter_filter.filter(data)
+      req = event.request
+      return unless req && req.data.present?
+
+      data = req.data
+      if data.is_a?(String)
+        # Maybe JSON request
+        begin
+          data = JSON.parse(data)
+          req.data = JSON.dump(@parameter_filter.filter(data))
+        rescue JSON::ParserError => e
+          # Record parser error to extra field
+          event.extra['BlousonError'] = e.message
         end
+      else
+        req.data = @parameter_filter.filter(data)
       end
     end
 
     def process_query_string(event)
-      if event[:request] && event[:request][:query_string].present?
-        query    = Rack::Utils.parse_query(event[:request][:query_string])
-        filtered = @parameter_filter.filter(query)
+      req = event.request
+      return unless req && req.query_string.present?
 
-        event[:request][:query_string] = Rack::Utils.build_query(filtered)
-      end
+      query    = Rack::Utils.parse_query(req.query_string)
+      filtered = @parameter_filter.filter(query)
+
+      req.query_string = Rack::Utils.build_query(filtered)
     end
 
     def process_request_header(event)
-      if event[:request] && event[:request][:headers]
-        headers = event[:request][:headers]
-        headers.each_key do |k|
-          if @header_filters.include?(k.downcase)
-            headers[k] = 'FILTERED'
-          end
+      req = event.request
+      return unless req && req.headers
+
+      req.headers.each_key do |k|
+        if @header_filters.include?(k.downcase)
+          req.headers[k] = 'FILTERED'
         end
       end
     end
 
     def process_cookie(event)
-      if (cookies = event.dig(:request, :cookies))
-        event[:request][:cookies] = @parameter_filter.filter(cookies)
+      req = event.request
+      return unless req
+
+      if req.cookies
+        req.cookies = @parameter_filter.filter(req.cookies)
       end
 
-      if event[:request] && event[:request][:headers] && event[:request][:headers]['Cookie']
-        cookies  = Hash[event[:request][:headers]['Cookie'].split('; ').map { |pair| pair.split('=', 2) }]
+      if req.headers && req.headers['Cookie']
+        cookies  = Hash[req.headers['Cookie'].split('; ').map { |pair| pair.split('=', 2) }]
         filtered = @parameter_filter.filter(cookies)
 
-        event[:request][:headers]['Cookie'] = filtered.map { |pair| pair.join('=') }.join('; ')
+        req.headers['Cookie'] = filtered.map { |pair| pair.join('=') }.join('; ')
       end
     end
   end
