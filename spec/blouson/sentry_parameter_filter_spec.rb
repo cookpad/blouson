@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'sentry-ruby'
-require 'rack/mock_request'
+require 'rack/utils'
 require 'blouson/sentry_parameter_filter'
 
 RSpec.describe Blouson::SentryParameterFilter do
