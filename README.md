@@ -7,7 +7,7 @@ Blouson is a filter tool for Rails to conceal sensitive data from various logs.
 - HTTP Request parameters in Rails log
 - SQL query in Rails log
 - Exception messages in `ActiveRecord::StatementInvalid`
-- Sentry Raven parameters
+- Sentry parameters
 - Mail parameters in Rails log
 
 ## Installation
@@ -86,23 +86,6 @@ Sentry.init do |config|
 end
 
 ```
-
-### RavenParameterFilterProcessor
-Blouson provides an [Raven-Ruby](https://github.com/getsentry/raven-ruby) processor to conceal sensitive data from query string, request body, request headers and cookie values.
-
-```ruby
-require 'blouson/raven_parameter_filter_processor'
-
-filter_pattern = Rails.application.config.filter_parameters
-secure_headers = %w(secret_token)
-
-Raven.configure do |config|
-  ...
-  config.processors << Blouson::RavenParameterFilterProcessor.create(filter_pattern, secure_headers)
-  ...
-end
-```
-
 
 ### SensitiveMailLogFilter
 ActionMailer outputs email address, all headers, and body text to the log when sending email.
