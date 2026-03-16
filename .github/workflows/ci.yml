@@ -15,6 +15,7 @@ jobs:
           - '3.2'
           - '3.3'
           - '3.4'
+          - '4.0'
         gemfile:
           - rails_7.1
           - rails_7.2
@@ -42,7 +43,7 @@ jobs:
     env:
       BUNDLE_GEMFILE: ${{ github.workspace }}/gemfiles/${{ matrix.gemfile }}.gemfile
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
