@@ -26,7 +26,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'arproxy', '>= 1.0.0'
   spec.add_development_dependency 'mysql2'
   spec.add_development_dependency 'pry'
-  spec.add_development_dependency 'sentry-raven'
   spec.add_development_dependency 'sentry-ruby'
 
   spec.add_development_dependency 'appraisal'
