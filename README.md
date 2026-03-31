@@ -87,8 +87,7 @@ end
 
 ```
 
-> **Note:** Since sentry-ruby v6, `event.to_hash` is no longer available. Pass `event` directly to `filter.process` instead of `filter.process(event.to_hash)`.
-
+**Note:** Since sentry-ruby v6, `event.to_hash` is no longer available. Pass `event` directly to `filter.process` instead of `filter.process(event.to_hash)`.
 
 ### SensitiveMailLogFilter
 ActionMailer outputs email address, all headers, and body text to the log when sending email.
