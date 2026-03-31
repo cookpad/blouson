@@ -81,11 +81,13 @@ Sentry.init do |config|
   filter = Blouson::SentryParameterFilter.new(filter_pattern, secure_headers)
 
   config.before_send = lambda do |event, _hint|
-    filter.process(event.to_hash)
+    filter.process(event)
   end
 end
 
 ```
+
+**Note:** Since sentry-ruby v6, `event.to_hash` is no longer available. Pass `event` directly to `filter.process` instead of `filter.process(event.to_hash)`.
 
 ### SensitiveMailLogFilter
 ActionMailer outputs email address, all headers, and body text to the log when sending email.
