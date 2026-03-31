@@ -1,3 +1,8 @@
+# 6.0.0 (2026-03-31)
+- [Breaking change] Drop `to_hash` in SentryParameterFilter to support sentry-ruby v6. This change also drops support for sentry-ruby <= v5. Please upgrade the gem and update your Sentry initializer if it uses `filter.process(event.to_hash)`.
+- [Breaking change] Remove sentry-raven support
+- Add Ruby 4.0 to CI
+
 # 5.0.0 (2026-01-23)
 - [Breaking change] Drop support for Ruby 3.0
 - [Breaking change] Drop support for Rails 7.0
